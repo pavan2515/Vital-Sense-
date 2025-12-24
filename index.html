@@ -1,0 +1,1400 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VitalSense Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00796b;
+      --primary-light: #48a999;
+      --primary-dark: #004c40;
+      --accent: #ff6e40;
+      --normal: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+      --text-dark: #212121;
+      --text-light: #f5f5f5;
+      --background: #e0f7fa;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, var(--background), #ffffff);
+      margin: 0;
+      padding: 0;
+      color: var(--text-dark);
+    }
+    
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    @media (min-width: 768px) {
+      .dashboard {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-title {
+      font-size: 1.2em;
+      color: var(--primary);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .card-title i {
+      margin-right: 10px;
+    }
+    
+    .result {
+      font-size: 18px;
+      margin: 15px 0;
+      padding: 10px 20px;
+      background: #f6f6f6;
+      border-left: 5px solid var(--normal);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .result.warning {
+      border-left-color: var(--warning);
+      background-color: #fff8e1;
+    }
+    
+    .result.danger {
+      border-left-color: var(--danger);
+      background-color: #ffebee;
+    }
+    
+    .label {
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+    
+    .value {
+      font-weight: 500;
+    }
+    
+    .timestamp {
+      color: #666;
+      font-size: 0.8em;
+      text-align: right;
+      margin-top: 15px;
+    }
+    
+    .suggestion-box {
+      background-color: #e8f5e9;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border-left: 5px solid var(--normal);
+    }
+    
+    .suggestion-box.warning {
+      background-color: #fff8e1;
+      border-left-color: var(--warning);
+    }
+    
+    .suggestion-box.danger {
+      background-color: #ffebee;
+      border-left-color: var(--danger);
+    }
+    
+    .nav {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .nav a {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      margin: 0 10px;
+      text-decoration: none;
+      border-radius: 25px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav a:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #777;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Pulse animation for alerts */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>VitalSense - Real-Time Health Dashboard</h1>
+  </header>
+  
+  <div class="nav">
+    <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/history"><i class="fas fa-history"></i> History</a>
+    <a href="/test"><i class="fas fa-vial"></i> Test</a>
+  </div>
+  
+  <div class="container">
+    <div class="dashboard">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-heartbeat"></i> Vital Signs</div>
+        <div class="result" id="hr-container">
+          <span class="label">Heart Rate:</span> 
+          <span class="value"><span id="hr">--</span> bpm</span>
+        </div>
+        <div class="result" id="spo2-container">
+          <span class="label">SpO₂:</span> 
+          <span class="value"><span id="spo2">--</span> %</span>
+        </div>
+        <div class="timestamp">Last updated: <span id="last-updated">--</span></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title"><i class="fas fa-running"></i> Activity Assessment</div>
+        <div class="result">
+          <span class="label">Activity:</span> 
+          <span class="value" id="activity">--</span>
+        </div>
+        <div class="result" id="anomaly-container">
+          <span class="label">Anomaly:</span> 
+          <span class="value" id="anomaly">--</span>
+        </div>
+        <div class="suggestion-box" id="suggestion-box">
+          <span id="suggestion">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    &copy; 2025 VitalSense. All rights reserved.
+  </footer>
+  
+  <script>
+    const updateTimestamp = (isoString) => {
+      if (!isoString || isoString === '--') return '--';
+      const date = new Date(isoString);
+      return date.toLocaleTimeString();
+    };
+    
+    const updateAnomalyStyle = (anomaly) => {
+      const anomalyContainer = document.getElementById('anomaly-container');
+      const suggestionBox = document.getElementById('suggestion-box');
+      
+      // Reset classes
+      anomalyContainer.className = 'result';
+      suggestionBox.className = 'suggestion-box';
+      
+      // Stop any animations
+      anomalyContainer.classList.remove('pulse');
+      suggestionBox.classList.remove('pulse');
+      
+      if (anomaly === 'Normal') {
+        // Keep default
+        return;
+      }
+      
+      if (['Tachycardia', 'Bradycardia', 'Possible Sensor Error'].includes(anomaly)) {
+        anomalyContainer.classList.add('warning');
+        suggestionBox.classList.add('warning');
+      }
+      
+      if (['Compensated Hypoxia', 'Critical Hypoxia', 'Unusual (rare)'].includes(anomaly)) {
+        anomalyContainer.classList.add('danger');
+        suggestionBox.classList.add('danger');
+        anomalyContainer.classList.add('pulse');
+        suggestionBox.classList.add('pulse');
+      }
+    };
+    
+    const updateVitalSigns = (hr, spo2) => {
+      const hrContainer = document.getElementById('hr-container');
+      const spo2Container = document.getElementById('spo2-container');
+      
+      // Reset classes
+      hrContainer.className = 'result';
+      spo2Container.className = 'result';
+      
+      // Heart rate styling
+      if (hr !== '--') {
+        const hrNum = parseInt(hr);
+        if (hrNum > 100) hrContainer.classList.add('warning');
+        if (hrNum > 120) hrContainer.classList.add('danger');
+        if (hrNum < 60) hrContainer.classList.add('warning');
+        if (hrNum < 50) hrContainer.classList.add('danger');
+      }
+      
+      // SpO2 styling
+      if (spo2 !== '--') {
+        const spo2Num = parseInt(spo2);
+        if (spo2Num < 95) spo2Container.classList.add('warning');
+        if (spo2Num < 90) spo2Container.classList.add('danger');
+      }
+    };
+    
+    async function fetchData() {
+      try {
+        const response = await fetch('/latest');
+        const data = await response.json();
+        
+        document.getElementById("activity").textContent = data.activity || '--';
+        document.getElementById("anomaly").textContent = data.anomaly || '--';
+        document.getElementById("hr").textContent = data.heart_rate ?? '--';
+        document.getElementById("spo2").textContent = data.spo2 ?? '--';
+        document.getElementById("suggestion").textContent = data.suggestion || '--';
+        document.getElementById("last-updated").textContent = updateTimestamp(data.timestamp);
+        
+        updateAnomalyStyle(data.anomaly);
+        updateVitalSigns(data.heart_rate, data.spo2);
+      } catch (err) {
+        console.error("Error fetching latest data:", err);
+      }
+    }
+    
+    fetchData();
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VitalSense - Vitals History</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00796b;
+      --primary-light: #48a999;
+      --primary-dark: #004c40;
+      --accent: #ff6e40;
+      --normal: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+      --text-dark: #212121;
+      --text-light: #f5f5f5;
+      --background: #e0f7fa;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, var(--background), #ffffff);
+      margin: 0;
+      padding: 0;
+      color: var(--text-dark);
+    }
+    
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .nav {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .nav a {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      margin: 0 10px;
+      text-decoration: none;
+      border-radius: 25px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav a:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background-color: var(--primary);
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .normal {
+      color: var(--normal);
+    }
+    
+    .warning {
+      color: var(--warning);
+    }
+    
+    .danger {
+      color: var(--danger);
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.8em;
+      color: white;
+    }
+    
+    .badge-normal {
+      background-color: var(--normal);
+    }
+    
+    .badge-warning {
+      background-color: var(--warning);
+    }
+    
+    .badge-danger {
+      background-color: var(--danger);
+    }
+    
+    .alert-sent {
+      background-color: #ffd4d4;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #777;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .filter-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-control {
+      display: flex;
+      align-items: center;
+    }
+    
+    .filter-control label {
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    
+    .filter-control select, .filter-control input {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    .chart-container {
+      height: 300px;
+      margin-bottom: 30px;
+    }
+    
+    .summary-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      min-width: 200px;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: white;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .stat-card h3 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    
+    .stat-value {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>VitalSense - Vitals History</h1>
+  </header>
+  
+  <div class="nav">
+    <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/history"><i class="fas fa-history"></i> History</a>
+    <a href="/test"><i class="fas fa-vial"></i> Test</a>
+  </div>
+  
+  <div class="container">
+    <div class="card">
+      <div class="summary-stats" id="summary-stats">
+        <!-- Summary stats will be added here -->
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="heartRateChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="filter-controls">
+        <div class="filter-control">
+          <label for="filter-condition">Condition:</label>
+          <select id="filter-condition">
+            <option value="">All</option>
+            <option value="Normal">Normal</option>
+            <option value="Bradycardia">Bradycardia</option>
+            <option value="Compensated Hypoxia">Compensated Hypoxia</option>
+            <option value="Critical Hypoxia">Critical Hypoxia</option>
+            <option value="Possible Sensor Error">Possible Sensor Error</option>
+            <option value="Tachycardia">Tachycardia</option>
+            <option value="Unusual (rare)">Unusual (rare)</option>
+          </select>
+        </div>
+        <button id="apply-filters">Apply Filters</button>
+        <button id="export-csv">Export CSV</button>
+      </div>
+      
+      <table id="vitals-table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Heart Rate</th>
+            <th>Condition</th>
+            <th>Alert</th>
+          </tr>
+        </thead>
+        <tbody id="vitals-data">
+          <!-- Data will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <footer>
+    &copy; 2025 VitalSense. All rights reserved.
+  </footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    // CSV data
+    const csvData = `Date,Time,Condition,Heart Rate,Alert
+5/9/2025,0:51:28,Bradycardia,57,"Low heart rate detected. If dizzy, seek help."
+5/9/2025,0:59:28,Compensated Hypoxia,90,Low oxygen levels. Try resting and deep breaths.
+5/9/2025,1:11:28,Compensated Hypoxia,66,Low oxygen levels. Try resting and deep breaths.
+5/9/2025,2:14:28,Possible Sensor Error,,Please adjust the sensor and try again.
+5/9/2025,5:36:28,Possible Sensor Error,,Please adjust the sensor and try again.
+5/9/2025,5:35:28,Normal,86,Vitals are within a healthy range. Keep monitoring.
+5/9/2025,2:15:28,Normal,69,Vitals are within a healthy range. Keep monitoring.
+5/9/2025,4:45:28,Bradycardia,35,"Low heart rate detected. If dizzy, seek help."
+5/9/2025,1:18:28,Possible Sensor Error,,Please adjust the sensor and try again.
+5/9/2025,3:43:28,Possible Sensor Error,,Please adjust the sensor and try again.
+5/9/2025,5:28:28,Compensated Hypoxia,78,Low oxygen levels. Try resting and deep breaths.
+5/9/2025,3:32:28,Bradycardia,37,"Low heart rate detected. If dizzy, seek help."
+5/9/2025,3:48:28,Unusual (rare),88,Unusual pattern detected. Recheck or consult doctor.
+5/9/2025,2:06:28,Normal,66,Vitals are within a healthy range. Keep monitoring.
+5/9/2025,4:28:28,Compensated Hypoxia,83,Low oxygen levels. Try resting and deep breaths.
+5/9/2025,1:02:28,Compensated Hypoxia,79,Low oxygen levels. Try resting and deep breaths.
+5/9/2025,2:31:28,Tachycardia,143,High heart rate detected. Please relax or rest.
+5/9/2025,1:13:28,Bradycardia,53,"Low heart rate detected. If dizzy, seek help."
+5/9/2025,5:03:28,Critical Hypoxia,82,Severely low oxygen. Seek emergency care now.
+5/9/2025,3:29:28,Critical Hypoxia,60,Severely low oxygen. Seek emergency care now.`;
+
+    // Parse CSV data
+    const parsedData = Papa.parse(csvData, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true
+    }).data;
+    
+    // Get badge class based on condition type
+    const getConditionBadgeClass = (condition) => {
+      if (condition === 'Normal') return 'badge-normal';
+      if (['Tachycardia', 'Bradycardia', 'Possible Sensor Error'].includes(condition)) return 'badge-warning';
+      if (['Compensated Hypoxia', 'Critical Hypoxia', 'Unusual (rare)'].includes(condition)) return 'badge-danger';
+      return 'badge-normal';
+    };
+    
+    // Format date for display
+    const formatDateTime = (date, time) => {
+      if (!date || !time) return '--';
+      return `${date} ${time}`;
+    };
+    
+    // Load vitals data
+    function loadVitalsData(filter = '') {
+      const tableBody = document.getElementById('vitals-data');
+      tableBody.innerHTML = '';
+      
+      let filteredData = parsedData;
+      if (filter) {
+        filteredData = parsedData.filter(record => record.Condition === filter);
+      }
+      
+      if (filteredData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No data found</td></tr>';
+        return;
+      }
+      
+      // Sort data by date and time
+      filteredData.sort((a, b) => {
+        const dateTimeA = `${a.Date} ${a.Time}`;
+        const dateTimeB = `${b.Date} ${b.Time}`;
+        return new Date(dateTimeA) - new Date(dateTimeB);
+      });
+      
+      filteredData.forEach(record => {
+        const row = document.createElement('tr');
+        
+        const alertSent = record.Alert && record.Alert.trim() !== '';
+        if (alertSent && record.Condition !== 'Normal') row.classList.add('alert-sent');
+        
+        row.innerHTML = `
+          <td>${formatDateTime(record.Date, record.Time)}</td>
+          <td>${record['Heart Rate'] || '--'} bpm</td>
+          <td><span class="badge ${getConditionBadgeClass(record.Condition)}">${record.Condition || '--'}</span></td>
+          <td>${record.Alert || '--'}</td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+    
+    // Calculate and display summary statistics
+    function displaySummaryStats() {
+      const stats = {
+        totalReadings: parsedData.length,
+        normalReadings: parsedData.filter(d => d.Condition === 'Normal').length,
+        averageHeartRate: calculateAverageHeartRate(),
+        criticalAlerts: parsedData.filter(d => 
+          ['Critical Hypoxia', 'Tachycardia'].includes(d.Condition)).length
+      };
+      
+      const summaryContainer = document.getElementById('summary-stats');
+      summaryContainer.innerHTML = `
+        <div class="stat-card">
+          <h3>Total Readings</h3>
+          <div class="stat-value">${stats.totalReadings}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Normal Readings</h3>
+          <div class="stat-value">${stats.normalReadings}</div>
+          <div>${Math.round((stats.normalReadings / stats.totalReadings) * 100)}% of total</div>
+        </div>
+        <div class="stat-card">
+          <h3>Avg Heart Rate</h3>
+          <div class="stat-value">${stats.averageHeartRate} bpm</div>
+        </div>
+        <div class="stat-card">
+          <h3>Critical Alerts</h3>
+          <div class="stat-value">${stats.criticalAlerts}</div>
+        </div>
+      `;
+    }
+    
+    // Calculate average heart rate
+    function calculateAverageHeartRate() {
+      const validHeartRates = parsedData
+        .filter(d => d['Heart Rate'] && !isNaN(d['Heart Rate']))
+        .map(d => d['Heart Rate']);
+      
+      if (validHeartRates.length === 0) return 0;
+      
+      const sum = validHeartRates.reduce((acc, rate) => acc + rate, 0);
+      return Math.round(sum / validHeartRates.length);
+    }
+    
+    // Create heart rate chart
+    function createHeartRateChart() {
+      // Prepare data
+      const validData = parsedData
+        .filter(d => d['Heart Rate'] && !isNaN(d['Heart Rate']))
+        .sort((a, b) => {
+          const dateTimeA = `${a.Date} ${a.Time}`;
+          const dateTimeB = `${b.Date} ${b.Time}`;
+          return new Date(dateTimeA) - new Date(dateTimeB);
+        });
+      
+      const labels = validData.map(d => d.Time);
+      const heartRates = validData.map(d => d['Heart Rate']);
+      const conditions = validData.map(d => d.Condition);
+      
+      // Define colors based on condition
+      const backgroundColors = conditions.map(condition => {
+        if (condition === 'Normal') return 'rgba(76, 175, 80, 0.2)';
+        if (['Tachycardia', 'Bradycardia', 'Possible Sensor Error'].includes(condition)) return 'rgba(255, 152, 0, 0.2)';
+        return 'rgba(244, 67, 54, 0.2)';
+      });
+      
+      const borderColors = conditions.map(condition => {
+        if (condition === 'Normal') return 'rgba(76, 175, 80, 1)';
+        if (['Tachycardia', 'Bradycardia', 'Possible Sensor Error'].includes(condition)) return 'rgba(255, 152, 0, 1)';
+        return 'rgba(244, 67, 54, 1)';
+      });
+      
+      // Create chart
+      const ctx = document.getElementById('heartRateChart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Heart Rate (bpm)',
+            data: heartRates,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 2,
+            tension: 0.3,
+            pointBackgroundColor: borderColors,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Heart Rate Trend',
+              font: {
+                size: 18
+              }
+            },
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                afterLabel: function(context) {
+                  const index = context.dataIndex;
+                  return `Condition: ${conditions[index]}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Heart Rate (bpm)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Export data to CSV
+    function exportToCSV() {
+      const filter = document.getElementById('filter-condition').value;
+      let dataToExport = parsedData;
+      
+      if (filter) {
+        dataToExport = parsedData.filter(record => record.Condition === filter);
+      }
+      
+      const csv = Papa.unparse(dataToExport);
+      
+      // Create a download link
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'vitals_export.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    // Event listeners
+    document.getElementById('apply-filters').addEventListener('click', () => {
+      const filter = document.getElementById('filter-condition').value;
+      loadVitalsData(filter);
+    });
+    
+    document.getElementById('export-csv').addEventListener('click', exportToCSV);
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      displaySummaryStats();
+      createHeartRateChart();
+      loadVitalsData();
+    });
+  </script>
+</body>
+</html>
+<!-- test.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VitalSense - Test Connection</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00796b;
+      --primary-light: #48a999;
+      --primary-dark: #004c40;
+      --accent: #ff6e40;
+      --normal: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+      --text-dark: #212121;
+      --text-light: #f5f5f5;
+      --background: #e0f7fa;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, var(--background), #ffffff);
+      margin: 0;
+      padding: 0;
+      color: var(--text-dark);
+    }
+    
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .nav {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .nav a {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      margin: 0 10px;
+      text-decoration: none;
+      border-radius: 25px;
+      transition: background-color 0.3s;
+    }
+    
+    .nav a:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    
+    .card-title {
+      font-size: 1.2em;
+      color: var(--primary);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .card-title i {
+      margin-right: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    input[type="number"], select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    
+    .slider-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .slider {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: #d3d3d3;
+      outline: none;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+    
+    .slider-value {
+      width: 60px;
+      text-align: right;
+      margin-left: 15px;
+      font-weight: bold;
+    }
+    
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .btn i {
+      margin-right: 8px;
+    }
+    
+    .btn-test {
+      background-color: var(--accent);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    .result-container {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f5f5f5;
+      display: none;
+    }
+    
+    .result-success {
+      border-left: 5px solid var(--normal);
+    }
+    
+    .result-error {
+      border-left: 5px solid var(--danger);
+    }
+    
+    .json-viewer {
+      background-color: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin-top: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .status-connected {
+      background-color: var(--normal);
+    }
+    
+    .status-disconnected {
+      background-color: var(--danger);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #777;
+      background-color: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .chart-container {
+      height: 300px;
+      margin-top: 20px;
+    }
+    
+    @media (max-width: 768px) {
+      .chart-container {
+        height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>VitalSense - Test Connection</h1>
+  </header>
+  
+  <div class="nav">
+    <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/history"><i class="fas fa-history"></i> History</a>
+    <a href="/test"><i class="fas fa-vial"></i> Test</a>
+  </div>
+  
+  <div class="container">
+    <div class="card">
+      <div class="card-title">
+        <i class="fas fa-wifi"></i> Device Connection Status
+      </div>
+      <div id="connection-status">
+        <span class="status-indicator status-disconnected" id="status-indicator"></span>
+        <span id="status-text">Checking connection...</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">
+        <i class="fas fa-vial"></i> Test Data Transmission
+      </div>
+      <p>Use this form to manually send test data to the system. This is useful for debugging or demonstrating the system.</p>
+      
+      <form id="test-form">
+        <div class="form-group">
+          <label for="activity">Activity:</label>
+          <select id="activity">
+            <option value="Walking">Walking</option>
+            <option value="Running">Running</option>
+            <option value="Sitting">Sitting</option>
+            <option value="Standing">Standing</option>
+            <option value="Lying Down">Lying Down</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="heart-rate">Heart Rate:</label>
+          <div class="slider-container">
+            <input type="range" min="40" max="180" value="75" class="slider" id="heart-rate">
+            <div class="slider-value"><span id="heart-rate-value">75</span> bpm</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="spo2">SpO₂:</label>
+          <div class="slider-container">
+            <input type="range" min="80" max="100" value="98" class="slider" id="spo2">
+            <div class="slider-value"><span id="spo2-value">98</span> %</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Accelerometer Data (simulated):</label>
+          <div class="chart-container" id="accel-chart"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <button type="submit" class="btn btn-test">
+            <i class="fas fa-paper-plane"></i> Send Test Data
+          </button>
+        </div>
+      </form>
+      
+      <div id="result-container" class="result-container">
+        <h3>Response:</h3>
+        <div id="response-status"></div>
+        <div id="json-viewer" class="json-viewer"></div>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    &copy; 2025 VitalSense. All rights reserved.
+  </footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+  <script>
+    // Heart Rate Slider
+    const heartRateSlider = document.getElementById('heart-rate');
+    const heartRateValue = document.getElementById('heart-rate-value');
+    heartRateSlider.oninput = function() {
+      heartRateValue.textContent = this.value;
+    }
+    
+    // SpO2 Slider
+    const spo2Slider = document.getElementById('spo2');
+    const spo2Value = document.getElementById('spo2-value');
+    spo2Slider.oninput = function() {
+      spo2Value.textContent = this.value;
+    }
+    
+    // Initialize Chart for Accelerometer Data
+    let accelChart;
+    
+    function initAccelChart() {
+      const ctx = document.createElement('canvas');
+      document.getElementById('accel-chart').appendChild(ctx);
+      
+      const labels = [...Array(50).keys()].map(i => '');
+      const dataX = Array(50).fill(0);
+      const dataY = Array(50).fill(0);
+      const dataZ = Array(50).fill(0);
+      
+      accelChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'X-axis',
+              data: dataX,
+              borderColor: '#4caf50',
+              tension: 0.4,
+              pointRadius: 0
+            },
+            {
+              label: 'Y-axis',
+              data: dataY,
+              borderColor: '#2196f3',
+              tension: 0.4,
+              pointRadius: 0
+            },
+            {
+              label: 'Z-axis',
+              data: dataZ,
+              borderColor: '#f44336',
+              tension: 0.4,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 0
+          },
+          scales: {
+            y: {
+              min: -20,
+              max: 20
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          }
+        }
+      });
+    }
+    
+    // Simulate accelerometer data based on activity
+    function simulateAccelData(activity) {
+      let magnitude, frequency, noiseLevel;
+      
+      switch(activity) {
+        case 'Running':
+          magnitude = 15;
+          frequency = 0.3;
+          noiseLevel = 4;
+          break;
+        case 'Walking':
+          magnitude = 8;
+          frequency = 0.2;
+          noiseLevel = 2;
+          break;
+        case 'Standing':
+          magnitude = 1;
+          frequency = 0.05;
+          noiseLevel = 0.5;
+          break;
+        case 'Sitting':
+          magnitude = 0.5;
+          frequency = 0.02;
+          noiseLevel = 0.3;
+          break;
+        case 'Lying Down':
+          magnitude = 0.2;
+          frequency = 0.01;
+          noiseLevel = 0.1;
+          break;
+        default:
+          magnitude = 1;
+          frequency = 0.1;
+          noiseLevel = 1;
+      }
+      
+      const time = Date.now() / 1000;
+      
+      // Generate data
+      const dataPoints = 50;
+      const dataX = [];
+      const dataY = [];
+      const dataZ = [];
+      
+      for (let i = 0; i < dataPoints; i++) {
+        const t = time + i * 0.1;
+        dataX.push(magnitude * Math.sin(t * frequency * 2 * Math.PI) + (Math.random() - 0.5) * noiseLevel);
+        dataY.push(magnitude * Math.cos(t * frequency * 2 * Math.PI) + (Math.random() - 0.5) * noiseLevel);
+        dataZ.push((Math.random() - 0.5) * noiseLevel + (activity === 'Lying Down' ? 9.8 : 0));
+      }
+      
+      return { dataX, dataY, dataZ };
+    }
+    
+    // Update chart with new data
+    function updateChart() {
+      const activity = document.getElementById('activity').value;
+      const { dataX, dataY, dataZ } = simulateAccelData(activity);
+      
+      accelChart.data.datasets[0].data = dataX;
+      accelChart.data.datasets[1].data = dataY;
+      accelChart.data.datasets[2].data = dataZ;
+      accelChart.update();
+    }
+    
+    // Check connection status
+    async function checkConnection() {
+      try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+        
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        if (data.status === 'connected') {
+          statusIndicator.className = 'status-indicator status-connected';
+          statusText.textContent = 'Connected to device';
+        } else {
+          statusIndicator.className = 'status-indicator status-disconnected';
+          statusText.textContent = 'Disconnected';
+        }
+      } catch (err) {
+        console.error("Error checking connection:", err);
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        
+        statusIndicator.className = 'status-indicator status-disconnected';
+        statusText.textContent = 'Error connecting to server';
+      }
+    }
+    
+    // Send test data
+    async function sendTestData(e) {
+      e.preventDefault();
+      
+      const activity = document.getElementById('activity').value;
+      const heartRate = document.getElementById('heart-rate').value;
+      const spo2 = document.getElementById('spo2').value;
+      const { dataX, dataY, dataZ } = simulateAccelData(activity);
+      
+      const resultContainer = document.getElementById('result-container');
+      const responseStatus = document.getElementById('response-status');
+      const jsonViewer = document.getElementById('json-viewer');
+      
+      try {
+        // Prepare data
+        const data = {
+          accel_x: dataX.slice(0, 10), // Send only 10 samples
+          accel_y: dataY.slice(0, 10),
+          accel_z: dataZ.slice(0, 10),
+          heart_rate: parseInt(heartRate),
+          spo2: parseInt(spo2)
+        };
+        
+        // Send data
+        const response = await fetch('/api/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        // Display results
+        resultContainer.style.display = 'block';
+        resultContainer.className = 'result-container result-success';
+        responseStatus.innerHTML = '<i class="fas fa-check-circle" style="color: var(--normal);"></i> Request successful';
+        jsonViewer.textContent = JSON.stringify(result, null, 2);
+        
+      } catch (err) {
+        resultContainer.style.display = 'block';
+        resultContainer.className = 'result-container result-error';
+        responseStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Error sending data';
+        jsonViewer.textContent = err.toString();
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initAccelChart();
+      checkConnection();
+      setInterval(checkConnection, 10000); // Check connection every 10 seconds
+      setInterval(updateChart, 500); // Update chart every 500ms
+      
+      document.getElementById('test-form').addEventListener('submit', sendTestData);
+      document.getElementById('activity').addEventListener('change', updateChart);
+    });
+  </script>
+</body>
+</html>

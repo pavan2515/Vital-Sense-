@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalSense - Real-Time Health Monitoring</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #5d78ff;
+            --secondary: #ff7d5d;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --dark: #1a237e;
+            --light: #f5f7ff;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            background: linear-gradient(135deg, #1a237e 0%, #5d78ff 100%);
+            color: white;
+            padding: 2rem 1rem;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-left: 1rem;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+            color: var(--secondary);
+        }
+        
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            margin-top: 2rem;
+        }
+        
+        .nav-item {
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .nav-item.active {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .page-title p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+        }
+        
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            object-fit: cover;
+        }
+        
+        .user-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.1rem;
+        }
+        
+        .user-info p {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        /* Vital Cards */
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .vital-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vital-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .vital-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+        
+        .vital-card.heart-rate::before {
+            background-color: var(--danger);
+        }
+        
+        .vital-card.spo2::before {
+            background-color: var(--info);
+        }
+        
+        .vital-card.temperature::before {
+            background-color: var(--warning);
+        }
+        
+        .vital-card.activity::before {
+            background-color: var(--success);
+        }
+        
+        .vital-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .vital-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .heart-rate .vital-icon {
+            background-color: var(--danger);
+        }
+        
+        .spo2 .vital-icon {
+            background-color: var(--info);
+        }
+        
+        .temperature .vital-icon {
+            background-color: var(--warning);
+        }
+        
+        .activity .vital-icon {
+            background-color: var(--success);
+        }
+        
+        .vital-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.25rem;
+        }
+        
+        .vital-info p {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .vital-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+        
+        .heart-rate .vital-value {
+            color: var(--danger);
+        }
+        
+        .spo2 .vital-value {
+            color: var(--info);
+        }
+        
+        .temperature .vital-value {
+            color: var(--warning);
+        }
+        
+        .activity .vital-value {
+            color: var(--success);
+        }
+        
+        .vital-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .vital-trend {
+            display: flex;
+            align-items: center;
+        }
+        
+        .trend-up {
+            color: var(--success);
+        }
+        
+        .trend-down {
+            color: var(--danger);
+        }
+        
+        /* Charts Section */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chart-btn {
+            background: #f0f0f0;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .chart-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        /* Alert Notification */
+        .alert-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+        
+        .alert {
+            background: white;
+            border-left: 5px solid var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            max-width: 350px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .alert.show {
+            transform: translateX(0);
+        }
+        
+        .alert-icon {
+            font-size: 1.5rem;
+            color: var(--danger);
+            margin-right: 1rem;
+        }
+        
+        .alert-content h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: #333;
+        }
+        
+        .alert-content p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .alert-close {
+            margin-left: auto;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        /* AI Chatbot */
+        .chatbot-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+        
+        .chatbot-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 20px rgba(93, 120, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .chatbot-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .chatbot-window.active {
+            display: flex;
+        }
+        
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chatbot-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+        }
+        
+        .chatbot-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .chatbot-status {
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .chatbot-close {
+            margin-left: auto;
+            cursor: pointer;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .bot-message {
+            background: white;
+            border-top-left-radius: 5px;
+            align-self: flex-start;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .user-message {
+            background: var(--primary);
+            color: white;
+            border-top-right-radius: 5px;
+            margin-left: auto;
+        }
+        
+        .chatbot-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #eee;
+            background: white;
+        }
+        
+        .chatbot-input input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        
+        .chatbot-input button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chatbot-input button:hover {
+            background: var(--dark);
+        }
+        
+        /* Team Section */
+        .team-section {
+            margin-top: 2rem;
+        }
+        
+        .team-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        
+        .team-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .team-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .team-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 1rem;
+            border: 5px solid #f5f7ff;
+        }
+        
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .team-role {
+            color: var(--primary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .team-bio {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+        
+        .team-social {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+        
+        .social-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #f5f7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .social-icon:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .connection-status.connected {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .connection-status.disconnected {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .connection-status i {
+            margin-right: 0.5rem;
+        }
+        
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .settings-panel.active {
+            display: block;
+        }
+        
+        .settings-panel h3 {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+        
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .settings-form label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .settings-form input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .settings-form button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        
+        .settings-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 3px 10px rgba(93, 120, 255, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <h1>VitalSense</h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-heart"></i>
+                        <span>Heart Rate</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-lungs"></i>
+                        <span>SpO2</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-thermometer-half"></i>
+                        <span>Temperature</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-running"></i>
+                        <span>Activity</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-history"></i>
+                        <span>History</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="page-title">
+                    <h2>Patient Dashboard</h2>
+                    <p>Real-time monitoring of vital signs</p>
+                </div>
+                
+            </header>
+            
+            <!-- Vital Cards -->
+            <div class="vitals-grid">
+                <div class="vital-card heart-rate">
+                    <div class="vital-header">
+                        <div class="vital-info">
+                            <h3>Heart Rate</h3>
+                            <p>Beats per minute</p>
+                        </div>
+                        <div class="vital-icon">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                    </div>
+                    <div class="vital-value" id="heart-rate-value">--</div>
+                    <div class="vital-footer">
+                        <span>Last update: <span id="heart-rate-time">--</span></span>
+                        <div class="vital-trend">
+                            <i class="fas fa-arrow-up trend-up"></i>
+                            <span>--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vital-card spo2">
+                    <div class="vital-header">
+                        <div class="vital-info">
+                            <h3>SpO2</h3>
+                            <p>Oxygen saturation</p>
+                        </div>
+                        <div class="vital-icon">
+                            <i class="fas fa-lungs"></i>
+                        </div>
+                    </div>
+                    <div class="vital-value" id="spo2-value">--</div>
+                    <div class="vital-footer">
+                        <span>Last update: <span id="spo2-time">--</span></span>
+                        <div class="vital-trend">
+                            <i class="fas fa-arrow-down trend-down"></i>
+                            <span>--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vital-card temperature">
+                    <div class="vital-header">
+                        <div class="vital-info">
+                            <h3>Temperature</h3>
+                            <p>Body temperature</p>
+                        </div>
+                        <div class="vital-icon">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                    </div>
+                    <div class="vital-value" id="temp-value">--</div>
+                    <div class="vital-footer">
+                        <span>Last update: <span id="temp-time">--</span></span>
+                        <div class="vital-trend">
+                            <i class="fas fa-arrow-up trend-up"></i>
+                            <span>--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vital-card activity">
+                    <div class="vital-header">
+                        <div class="vital-info">
+                            <h3>Activity</h3>
+                            <p>Movement level</p>
+                        </div>
+                        <div class="vital-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                    </div>
+                    <div class="vital-value" id="activity-value">--</div>
+                    <div class="vital-footer">
+                        <span>Last update: <span id="activity-time">--</span></span>
+                        <div class="vital-trend">
+                            <i class="fas fa-arrow-up trend-up"></i>
+                            <span>--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Section -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Vital Signs Overview</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn active">24h</button>
+                            <button class="chart-btn">7d</button>
+                            <button class="chart-btn">30d</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="vital-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Activity Breakdown</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn active">Today</button>
+                            <button class="chart-btn">Week</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="activity-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Section -->
+            <div class="team-section">
+                <h2>Our Team</h2>
+                
+                <div class="team-grid">
+                    <div class="team-card">
+                        <img src="D:\ArduinoProjects\healthtrack-project\WhatsApp Image 2025-05-07 at 11.07.42_50632c8c.jpg" alt="Team Member" class="team-avatar">
+                        <h3 class="team-name">Abhishek Kalshetty</h3>
+                        <p class="team-role">Lead Developer</p>
+                        <p class="team-bio">Hardware integration specialist with expertise in IoT sensor networks and embedded systems.</p>
+                        <div class="team-social">
+                            <a href="https://github.com/abhishekkalshetty" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                            <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="team-card">
+                        <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="Team Member" class="team-avatar">
+                        <h3 class="team-name">Priya Patel</h3>
+                        <p class="team-role">Data Scientist</p>
+                        <p class="team-bio">Developed the anomaly detection algorithms and machine learning models for real-time analysis.</p>
+                        <div class="team-social">
+                            <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                            <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="team-card">
+                        <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="Team Member" class="team-avatar">
+                        <h3 class="team-name">Marcus Johnson</h3>
+                        <p class="team-role">Frontend Developer</p>
+                        <p class="team-bio">Designed and implemented this interactive dashboard with real-time data visualization.</p>
+                        <div class="team-social">
+                            <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                            <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="team-card">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Team Member" class="team-avatar">
+                        <h3 class="team-name">Emily Rodriguez</h3>
+                        <p class="team-role">UX/UI Designer</p>
+                        <p class="team-bio">Creates intuitive and user-friendly interfaces for healthcare professionals and patients.</p>
+                        <div class="team-social">
+                            <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-icon"><i class="fab fa-behance"></i></a>
+                            <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>        </main>
+    </div>
+    
+    <!-- Connection Status -->
+    <div class="connection-status disconnected" id="connection-status">
+        <i class="fas fa-plug"></i>
+        <span>Disconnected from ESP8266</span>
+    </div>
+    
+    <!-- Settings Button -->
+    <div class="settings-btn" id="settings-btn">
+        <i class="fas fa-cog"></i>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settings-panel">
+        <h3>ESP8266 Connection Settings</h3>
+        <form class="settings-form" id="settings-form">
+            <label for="esp-ip">ESP8266 IP Address</label>
+            <input type="text" id="esp-ip" placeholder="192.168.1.100" required>
+            
+            <label for="esp-port">Port (optional)</label>
+            <input type="text" id="esp-port" placeholder="80">
+            
+            <label for="esp-endpoint">Data Endpoint</label>
+            <input type="text" id="esp-endpoint" placeholder="/data" required>
+            
+            <label for="poll-interval">Polling Interval (ms)</label>
+            <input type="number" id="poll-interval" placeholder="2000" min="500" required>
+            
+            <button type="submit">Save Settings</button>
+        </form>
+    </div>
+    
+    <!-- Alert Notification -->
+    <div class="alert-container" id="alert-container">
+        <!-- Alerts will be added here dynamically -->
+    </div>
+    
+    <!-- AI Chatbot -->
+    <div class="chatbot-container">
+        <div class="chatbot-btn" id="chatbot-btn">
+            <i class="fas fa-robot"></i>
+        </div>
+        
+        <div class="chatbot-window" id="chatbot-window">
+            <div class="chatbot-header">
+                <img src="https://ui-avatars.com/api/?name=VS+AI&background=5d78ff&color=fff" alt="AI Assistant">
+                <div>
+                    <h3>VitalSense AI</h3>
+                    <div class="chatbot-status">
+                        <span class="status-dot"></span>
+                        <span>Online</span>
+                    </div>
+                </div>
+                <div class="chatbot-close" id="chatbot-close">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="message bot-message">
+                    Hello! I'm your VitalSense AI assistant. I can help you interpret the patient's vital signs and detect any anomalies. How can I assist you today?
+                </div>
+            </div>
+            
+            <div class="chatbot-input">
+                <input type="text" id="chatbot-input" placeholder="Ask me about the patient's vitals...">
+                <button id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const heartRateValue = document.getElementById('heart-rate-value');
+        const spo2Value = document.getElementById('spo2-value');
+        const tempValue = document.getElementById('temp-value');
+        const activityValue = document.getElementById('activity-value');
+        
+        const heartRateTime = document.getElementById('heart-rate-time');
+        const spo2Time = document.getElementById('spo2-time');
+        const tempTime = document.getElementById('temp-time');
+        const activityTime = document.getElementById('activity-time');
+        
+        const alertContainer = document.getElementById('alert-container');
+        const connectionStatus = document.getElementById('connection-status');
+        
+        // Settings elements
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsForm = document.getElementById('settings-form');
+        
+        // Initialize Charts
+        const vitalChartCtx = document.getElementById('vital-chart').getContext('2d');
+        const activityChartCtx = document.getElementById('activity-chart').getContext('2d');
+        
+        const vitalChart = new Chart(vitalChartCtx, {
+            type: 'line',
+            data: {
+                labels: Array(24).fill().map((_, i) => `${i}:00`),
+                datasets: [
+                    {
+                        label: 'Heart Rate (BPM)',
+                        data: Array(24).fill(0),
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'SpO2 (%)',
+                        data: Array(24).fill(0),
+                        borderColor: '#2196f3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Temperature (°C)',
+                        data: Array(24).fill(0),
+                        borderColor: '#ff9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+        
+        const activityChart = new Chart(activityChartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Resting', 'Walking', 'Running', 'Other'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        '#5d78ff',
+                        '#4caf50',
+                        '#f44336',
+                        '#ff9800'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        
+        // Settings
+        let espConfig = {
+            ip: localStorage.getItem('esp_ip') || '192.168.1.100',
+            port: localStorage.getItem('esp_port') || '80',
+            endpoint: localStorage.getItem('esp_endpoint') || '/data',
+            pollInterval: localStorage.getItem('esp_poll_interval') || 2000
+        };
+        
+        let pollIntervalId = null;
+        let isConnected = false;
+        
+        // Initialize settings form
+        document.getElementById('esp-ip').value = espConfig.ip;
+        document.getElementById('esp-port').value = espConfig.port;
+        document.getElementById('esp-endpoint').value = espConfig.endpoint;
+        document.getElementById('poll-interval').value = espConfig.pollInterval;
+        
+        // Toggle settings panel
+        settingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.toggle('active');
+        });
+        
+        // Save settings
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            espConfig = {
+                ip: document.getElementById('esp-ip').value,
+                port: document.getElementById('esp-port').value,
+                endpoint: document.getElementById('esp-endpoint').value,
+                pollInterval: parseInt(document.getElementById('poll-interval').value)
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('esp_ip', espConfig.ip);
+            localStorage.setItem('esp_port', espConfig.port);
+            localStorage.setItem('esp_endpoint', espConfig.endpoint);
+            localStorage.setItem('esp_poll_interval', espConfig.pollInterval);
+            
+            // Restart polling
+            startPolling();
+            
+            // Close settings panel
+            settingsPanel.classList.remove('active');
+            
+            showAlert('Settings Saved', 'New configuration has been applied successfully');
+        });
+        
+        // Function to get data from ESP8266
+        async function fetchDataFromESP() {
+            const url = `http://${espConfig.ip}${espConfig.port ? ':' + espConfig.port : ''}${espConfig.endpoint}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    cache: 'no-cache'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching data from ESP8266:', error);
+                updateConnectionStatus(false);
+                throw error;
+            }
+        }
+        
+        // Function to process and display data
+        function processData(data) {
+            const now = new Date();
+            
+            // Update connection status
+            updateConnectionStatus(true);
+            
+            // Update vital signs
+            if (data.heart_rate !== undefined) {
+                heartRateValue.textContent = data.heart_rate;
+                heartRateTime.textContent = formatTime(now);
+                
+                // Update chart
+                vitalChart.data.datasets[0].data.push(data.heart_rate);
+                if (vitalChart.data.datasets[0].data.length > 24) {
+                    vitalChart.data.datasets[0].data.shift();
+                }
+                
+                // Check for anomaly
+                if (data.heart_rate > 100 || data.heart_rate < 60) {
+                    showAlert(`Heart Rate Alert: ${data.heart_rate} BPM`, 
+                              data.heart_rate > 100 ? 'Tachycardia detected' : 'Bradycardia detected');
+                }
+            }
+            
+            if (data.spo2 !== undefined) {
+                spo2Value.textContent = data.spo2;
+                spo2Time.textContent = formatTime(now);
+                
+                // Update chart
+                vitalChart.data.datasets[1].data.push(data.spo2);
+                if (vitalChart.data.datasets[1].data.length > 24) {
+                    vitalChart.data.datasets[1].data.shift();
+                }
+                
+                // Check for anomaly
+                if (data.spo2 < 90) {
+                    showAlert(`SpO2 Alert: ${data.spo2}%`, 'Low oxygen saturation detected');
+                }
+            }
+            
+            if (data.temperature !== undefined) {
+                tempValue.textContent = data.temperature.toFixed(1);
+                tempTime.textContent = formatTime(now);
+                
+                // Update chart
+                vitalChart.data.datasets[2].data.push(data.temperature);
+                if (vitalChart.data.datasets[2].data.length > 24) {
+                    vitalChart.data.datasets[2].data.shift();
+                }
+                
+                // Check for anomaly
+                if (data.temperature > 37.5 || data.temperature < 36.0) {
+                    showAlert(`Temperature Alert: ${data.temperature.toFixed(1)}°C`, 
+                              data.temperature > 37.5 ? 'Fever detected' : 'Low temperature detected');
+                }
+            }
+            
+            if (data.activity !== undefined) {
+                activityValue.textContent = data.activity.toFixed(1);
+                activityTime.textContent = formatTime(now);
+                
+                // Update activity chart (simplified)
+                const newData = [
+                    Math.min(100, Math.max(0, 100 - data.activity * 10)), // Resting
+                    Math.min(100, data.activity * 3),                     // Walking
+                    Math.min(100, Math.max(0, data.activity - 5) * 2),   // Running
+                    Math.min(100, Math.random() * 10)                    // Other
+                ];
+                
+                // Normalize to sum to 100
+                const sum = newData.reduce((a, b) => a + b, 0);
+                activityChart.data.datasets[0].data = newData.map(v => (v / sum) * 100);
+            }
+            
+            // Update charts
+            vitalChart.update();
+            activityChart.update();
+        }
+        
+        // Function to start polling ESP8266
+        function startPolling() {
+            // Clear any existing interval
+            if (pollIntervalId) {
+                clearInterval(pollIntervalId);
+            }
+            
+            // Start new polling interval
+            pollIntervalId = setInterval(async () => {
+                try {
+                    const data = await fetchDataFromESP();
+                    processData(data);
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, espConfig.pollInterval);
+            
+            // Initial fetch
+            fetchDataFromESP()
+                .then(processData)
+                .catch(error => console.error('Initial fetch error:', error));
+        }
+        
+        // Update connection status UI
+        function updateConnectionStatus(connected) {
+            if (connected !== isConnected) {
+                isConnected = connected;
+                if (connected) {
+                    connectionStatus.className = 'connection-status connected';
+                    connectionStatus.innerHTML = '<i class="fas fa-plug"></i><span>Connected to ESP8266</span>';
+                } else {
+                    connectionStatus.className = 'connection-status disconnected';
+                    connectionStatus.innerHTML = '<i class="fas fa-plug"></i><span>Disconnected from ESP8266</span>';
+                }
+            }
+        }
+        
+        function formatTime(date) {
+            if (!date) return '--';
+            
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        
+        function showAlert(title, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert';
+            alertDiv.innerHTML = `
+                <div class="alert-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="alert-content">
+                    <h4>${title}</h4>
+                    <p>${message}</p>
+                </div>
+                <div class="alert-close">
+                    <i class="fas fa-times"></i>
+                </div>
+            `;
+            
+            alertContainer.appendChild(alertDiv);
+            
+            // Show alert
+            setTimeout(() => {
+                alertDiv.classList.add('show');
+            }, 100);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 300);
+            }, 10000);
+            
+            // Close button
+            alertDiv.querySelector('.alert-close').addEventListener('click', () => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 300);
+            });
+        }
+        
+        // Chatbot Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatbotBtn = document.getElementById('chatbot-btn');
+            const chatbotWindow = document.getElementById('chatbot-window');
+            const chatbotClose = document.getElementById('chatbot-close');
+            
+            // Toggle chatbot window
+            chatbotBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                chatbotWindow.classList.toggle('active');
+            });
+            
+            // Close chatbot window
+            chatbotClose.addEventListener('click', function(e) {
+                e.stopPropagation();
+                chatbotWindow.classList.remove('active');
+            });
+            
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!chatbotWindow.contains(e.target)) {
+                    chatbotWindow.classList.remove('active');
+                }
+            });
+            
+            // Prevent closing when clicking inside the chatbot
+            chatbotWindow.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Chatbot message functionality
+            const chatbotMessages = document.getElementById('chatbot-messages');
+            const chatbotInput = document.getElementById('chatbot-input');
+            const chatbotSend = document.getElementById('chatbot-send');
+            
+            chatbotSend.addEventListener('click', sendMessage);
+            chatbotInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            function sendMessage() {
+                const message = chatbotInput.value.trim();
+                if (message) {
+                    addMessage(message, 'user');
+                    chatbotInput.value = '';
+                    
+                    // Simulate AI response
+                    setTimeout(() => {
+                        const aiResponse = generateAIResponse(message);
+                        addMessage(aiResponse, 'bot');
+                    }, 1000);
+                }
+            }
+            
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+                messageDiv.textContent = text;
+                chatbotMessages.appendChild(messageDiv);
+                chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            }
+            
+            function generateAIResponse(message) {
+                const lowerMessage = message.toLowerCase();
+                
+                // Get current values for context
+                const hr = heartRateValue.textContent;
+                const spo2 = spo2Value.textContent;
+                const temp = tempValue.textContent;
+                const activity = activityValue.textContent;
+                
+                if (lowerMessage.includes('heart') || lowerMessage.includes('rate') || lowerMessage.includes('bpm')) {
+                    if (hr !== '--') {
+                        const hrNum = parseInt(hr);
+                        if (hrNum > 100) {
+                            return `The patient's heart rate is currently ${hr} BPM, which is elevated. This could indicate physical activity, stress, or potential tachycardia.`;
+                        } else if (hrNum < 60) {
+                            return `The patient's heart rate is currently ${hr} BPM, which is lower than average. This could be normal for athletes or could indicate bradycardia.`;
+                        } else {
+                            return `The patient's heart rate is currently ${hr} BPM, which is within the normal resting range (60-100 BPM).`;
+                        }
+                    }
+                    return "I don't have current heart rate data. Please check the sensor connection.";
+                } 
+                else if (lowerMessage.includes('spo2') || lowerMessage.includes('oxygen')) {
+                    if (spo2 !== '--') {
+                        const spo2Num = parseInt(spo2);
+                        if (spo2Num < 90) {
+                            return `Warning: The patient's SpO2 is currently ${spo2}%, which is below the normal range (95-100%). This may indicate hypoxemia and should be investigated.`;
+                        } else {
+                            return `The patient's SpO2 is currently ${spo2}%, which is within the normal range (95-100%).`;
+                        }
+                    }
+                    return "I don't have current SpO2 data. Please check the sensor connection.";
+                }
+                else if (lowerMessage.includes('temp') || lowerMessage.includes('temperature')) {
+                    if (temp !== '--') {
+                        const tempNum = parseFloat(temp);
+                        if (tempNum > 37.5) {
+                            return `The patient's temperature is currently ${temp}°C, which is elevated and may indicate fever.`;
+                        } else if (tempNum < 36.0) {
+                            return `The patient's temperature is currently ${temp}°C, which is lower than normal and may indicate hypothermia.`;
+                        } else {
+                            return `The patient's temperature is currently ${temp}°C, which is within the normal range (36-37.5°C).`;
+                        }
+                    }
+                    return "I don't have current temperature data. Please check the sensor connection.";
+                }
+                else if (lowerMessage.includes('activity') || lowerMessage.includes('movement')) {
+                    if (activity !== '--') {
+                        const activityNum = parseFloat(activity);
+                        if (activityNum > 7) {
+                            return `The patient's activity level is currently ${activity} (high). This indicates significant movement or exercise.`;
+                        } else if (activityNum > 3) {
+                            return `The patient's activity level is currently ${activity} (moderate). They may be walking or doing light activity.`;
+                        } else {
+                            return `The patient's activity level is currently ${activity} (low). They appear to be resting or sedentary.`;
+                        }
+                    }
+                    return "I don't have current activity data. Please check the sensor connection.";
+                }
+                else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                    return "Hello! I can help you monitor and interpret the patient's vital signs. You can ask me about heart rate, SpO2, temperature, or activity levels.";
+                }
+                else if (lowerMessage.includes('anomaly') || lowerMessage.includes('alert') || lowerMessage.includes('warning')) {
+                    // Check for any anomalies based on current values
+                    let anomalies = [];
+                    
+                    if (hr !== '--' && (parseInt(hr) > 100 || parseInt(hr) < 60)) {
+                        anomalies.push(`Heart rate (${hr} BPM)`);
+                    }
+                    if (spo2 !== '--' && parseInt(spo2) < 90) {
+                        anomalies.push(`SpO2 (${spo2}%)`);
+                    }
+                    if (temp !== '--' && (parseFloat(temp) > 37.5 || parseFloat(temp) < 36.0)) {
+                        anomalies.push(`Temperature (${temp}°C)`);
+                    }
+                    
+                    if (anomalies.length > 0) {
+                        return `I've detected potential anomalies in: ${anomalies.join(', ')}. These values are outside normal ranges and may require attention.`;
+                    } else {
+                        return "No significant anomalies detected in current vital signs. All values appear to be within normal ranges.";
+                    }
+                }
+                else {
+                    const responses = [
+                        "I'm designed to help with health monitoring. Could you ask about specific vital signs?",
+                        "I can provide insights about heart rate, oxygen levels, temperature, and activity. What would you like to know?",
+                        "For better assistance, please ask about the patient's current vital signs or any alerts.",
+                        "I'm your VitalSense assistant. Try asking 'What's the current heart rate?' or 'Are there any anomalies?'"
+                    ];
+                    return responses[Math.floor(Math.random() * responses.length)];
+                }
+            }
+        });
+        
+        // Initialize polling
+        startPolling();
+    </script>
+</body>
+</html>
