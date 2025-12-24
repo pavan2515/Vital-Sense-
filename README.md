@@ -1,2 +1,178 @@
-# Vital-Sense-
-VitalSense is a smart wearable health monitoring system that uses IoT sensors and machine learning to track heart rate, SpO₂, temperature, and activity in real time. It detects health anomalies, displays live data on a web dashboard, and triggers alerts for timely medical intervention
+# 🩺 VitalSense – Smart Wearable Health Monitoring System
+
+VitalSense is an IoT and Machine Learning–based wearable health monitoring system that tracks vital parameters in real time, detects anomalies, and sends instant alerts. The system integrates sensors, a Flask backend, an ML model, a web dashboard, and SMS notifications for emergency situations.
+
+---
+
+## 📌 Features
+
+* Real-time monitoring of **Heart Rate (BPM)** and **SpO₂**
+* **Activity recognition** using motion sensor data
+* **ML-based anomaly detection**
+* Live **web dashboard** for visualization
+* Automatic **SMS alerts** using Twilio
+* REST APIs for easy integration
+* Scalable and modular architecture
+
+---
+
+## 🛠️ Hardware Requirements
+
+* ESP32 / ESP8266
+* MAX30102 (Heart Rate & SpO₂ Sensor)
+* MPU6050 (Accelerometer & Gyroscope)
+* Power supply / wearable setup
+
+---
+
+## 💻 Software & Technologies Used
+
+* **Python**
+* **Flask** (Backend API)
+* **TensorFlow / Keras** (ML Model)
+* **HTML, CSS, JavaScript** (Frontend Dashboard)
+* **Chart.js** (Data visualization)
+* **Twilio API** (SMS alerts)
+* **SQLite** (Optional data storage)
+
+---
+
+## 🧠 System Architecture (Workflow)
+
+1. Sensors collect real-time health data
+2. ESP sends data to Flask backend (JSON format)
+3. Data is scaled and passed to ML model
+4. Model predicts **activity + anomaly**
+5. Results displayed on web dashboard
+6. If anomaly detected → **SMS alert sent**
+
+---
+
+## 📂 Project Structure
+
+```
+VitalSense/
+│
+├── app.py                  # Flask backend
+├── twilio_alert.py         # SMS alert logic
+├── templates/
+│   └── index.html          # Frontend dashboard
+├── sym/
+│   ├── activity_anomaly_model.h5
+│   ├── scaler.pkl
+│   ├── activity_encoder.pkl
+│   └── anomaly_encoder.pkl
+├── vitalsense.db           # Database (optional)
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ⚙️ How the Project Works (Step by Step)
+
+### 1️⃣ Sensor Data Collection
+
+* ESP reads:
+
+  * Accelerometer values (Ax, Ay, Az)
+  * Heart rate (BPM)
+  * SpO₂ (%)
+* Data is sent to backend as JSON.
+
+### 2️⃣ Backend Processing (Flask)
+
+* Flask receives data at `/predict`
+* Input is scaled using `scaler.pkl`
+* ML model predicts:
+
+  * **Activity** (Sitting, Walking, Running, etc.)
+  * **Anomaly type** (Normal, Tachycardia, Hypoxia, etc.)
+
+### 3️⃣ Anomaly Detection Logic
+
+If anomaly ≠ `Normal`, system:
+
+* Generates health suggestion
+* Triggers SMS alert via Twilio
+
+### 4️⃣ Frontend Dashboard
+
+* Fetches live data from `/latest`
+* Displays:
+
+  * Heart Rate
+  * SpO₂
+  * Activity
+  * Anomaly status
+* Shows alerts and charts in real time
+
+---
+
+## 🚨 SMS Alert System
+
+* Uses **Twilio API**
+* Sends emergency SMS when abnormal vitals detected
+* Example alert:
+
+```
+🚨 Anomaly Detected: Critical Hypoxia
+Activity: Walking
+Heart Rate: 115
+SpO₂: 85%
+```
+
+---
+
+## ▶️ How to Run the Project
+
+### Step 1: Install Dependencies
+
+```bash
+pip install flask tensorflow joblib numpy twilio
+```
+
+### Step 2: Run Backend
+
+```bash
+python app.py
+```
+
+### Step 3: Open Dashboard
+
+```
+http://localhost:5000
+```
+
+---
+
+## 📊 API Endpoints
+
+| Endpoint   | Method | Description       |
+| ---------- | ------ | ----------------- |
+| `/`        | GET    | Web dashboard     |
+| `/predict` | POST   | Send sensor data  |
+| `/latest`  | GET    | Get latest vitals |
+
+---
+
+## 📈 Future Enhancements
+
+* Mobile app integration
+* Cloud database (Firebase/AWS)
+* Doctor dashboard & patient history
+* Wearable miniaturization
+* AI health chatbot integration
+
+---
+
+## 👨‍💻 Author
+
+**Pavan K**
+Electronics & Communication Engineer
+IoT | Embedded Systems | Machine Learning
+
+
+
+Just tell me bro 🔥
+
