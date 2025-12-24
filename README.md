@@ -174,5 +174,3 @@ IoT | Embedded Systems | Machine Learning
 
 
 
-Just tell me bro 🔥
-
