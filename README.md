@@ -22,8 +22,98 @@ VitalSense is an IoT and Machine Learning–based wearable health monitoring sys
 * MAX30102 (Heart Rate & SpO₂ Sensor)
 * MPU6050 (Accelerometer & Gyroscope)
 * Power supply / wearable setup
+---
+
+## 🔌 Hardware Design & Connections
+
+VitalSense uses an ESP-based wearable hardware setup to acquire physiological and motion data. The sensors communicate with the controller using **I2C** and **Wi-Fi**, ensuring low power consumption and real-time data transfer.
 
 ---
+
+### 🧠 Microcontroller
+
+* **ESP32 / ESP8266**
+* Acts as the central controller
+* Handles sensor interfacing, data preprocessing, and communication with backend
+
+---
+
+### ❤️ MAX30102 – Heart Rate & SpO₂ Sensor (I2C)
+
+Used to measure pulse rate and blood oxygen saturation.
+
+**Connections (ESP8266 / ESP32):**
+
+| MAX30102 Pin | ESP Pin                            | Description  |
+| ------------ | ---------------------------------- | ------------ |
+| VCC          | 3.3V                               | Power supply |
+| GND          | GND                                | Ground       |
+| SDA          | GPIO 4 (ESP8266) / GPIO 21 (ESP32) | I2C Data     |
+| SCL          | GPIO 5 (ESP8266) / GPIO 22 (ESP32) | I2C Clock    |
+
+📌 Operates strictly at **3.3V logic**
+
+---
+
+### 🏃 MPU6050 – Accelerometer & Gyroscope (Motion Sensor)
+
+Used for **activity recognition** (sitting, walking, running, etc.).
+
+Two MPU6050 sensors can be used for enhanced motion accuracy.
+
+**Communication Method:**
+
+* MPU6050 data is collected by a **separate ESP module**
+* Data is transmitted wirelessly to the main ESP using **Wi-Fi UDP**
+
+**MPU6050 (Sender ESP) Connections:**
+
+| MPU6050 Pin | ESP Pin |
+| ----------- | ------- |
+| VCC         | 3.3V    |
+| GND         | GND     |
+| SDA         | I2C SDA |
+| SCL         | I2C SCL |
+
+---
+
+### 🌐 Wireless Communication
+
+* **Wi-Fi (UDP Protocol)**
+* Enables fast, low-latency transfer of motion data
+* Main ESP receives MPU data on a defined UDP port
+
+```cpp
+const int udpPort = 1234;
+```
+
+---
+
+### 🔋 Power Supply
+
+* USB / Li-ion battery
+* Onboard 3.3V regulation for sensors
+* Suitable for wearable form factor
+
+---
+
+### 🧩 Hardware Data Flow
+
+```
+MAX30102  ──I2C──▶ ESP
+MPU6050s ──ESP──UDP──▶ ESP
+ESP ──Wi-Fi──▶ Flask Backend
+```
+
+---
+
+### ⚠️ Important Hardware Notes
+
+* Use **short wires** for I2C stability
+* Avoid 5V supply to MAX30102 / MPU6050
+* Ensure common ground across all modules
+* Keep wearable sensors firmly attached for accurate readings
+
 
 ## 💻 Software & Technologies Used
 
